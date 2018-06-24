@@ -4,7 +4,7 @@ import sys
 
 
 class ProgressRange(object):
-    def __init__(self, *args, out=sys.stdout, digits=0, mark='#', message=None):
+    def __init__(self, *args, out=sys.stdout, digits=0, mark='#', message=None, finished_message=None):
         self.range = range(*args)
         self.iter = iter(self.range)
         self.progress = -1
@@ -14,6 +14,7 @@ class ProgressRange(object):
         self.digits = digits
         self.mark = mark
         self.message = message
+        self.finished_message = finished_message
 
     def __iter__(self):
         return self
@@ -33,8 +34,16 @@ class ProgressRange(object):
         try:
             return next(self.iter)
         except:
-            self.out.write('\n')
+            self.out.write(self.finished_message_string())
             raise
+
+    def finished_message_string(self):
+        if self.finished_message is None:
+            return '\n'
+
+        finished_string = '\r{{:{}}}\n'.format(self.width)
+        return finished_string.format(self.finished_message)
+
 
     def bar_string_width(self):
         bar_width = self.width - (self.percentage_string_width() + 1)
@@ -57,7 +66,7 @@ class ProgressRange(object):
 
     def percentage(self):
         if self.total <= 0:
-            return 0
+            return 1.00
 
         return self.progress / float(self.total)
 
