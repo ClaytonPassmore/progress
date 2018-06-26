@@ -3,96 +3,65 @@ import shutil
 import sys
 
 
-class ProgressRange(object):
-    def __init__(self, *args, out=sys.stdout, digits=0, mark='#', message=None, finished_message=None):
-        self.range = range(*args)
-        self.iter = iter(self.range)
+class Progress(object):
+    def __init__(self, *args, **kwargs):
+        self.bar_mark = kwargs.get('bar_mark', '#')
+        self.bar_format = kwargs.get('bar_format', '[{}]')
+        self.message = kwargs.get('message', None)
+        self.percentage_format = kwargs.get('percentage_format', '{:>5.1f}%')
+        self.render_order = kwargs.get('render_order', ['percentage', 'bar'])
+        self.progress_format = kwargs.get('progress_format', '{percentage} {bar}')
+        self.stream = kwargs.get('stream', sys.stdout)
+        self.width = kwargs.get('width', None)
+        self.total = kwargs.get('total', None)
+
         self.progress = -1
-        self.total = len(self.range)
-        self.width = shutil.get_terminal_size().columns
-        self.out = out
-        self.digits = digits
-        self.mark = mark
-        self.message = message
-        self.finished_message = finished_message
 
-    def __iter__(self):
-        return self
+    def computed_width(self):
+        return self.width or shutil.get_terminal_size().columns
 
-    def __next__(self):
-        # Need to check terminal size incase it changed.
-        self.width = shutil.get_terminal_size().columns
-
+    def tick(self):
         self.progress += 1
-        progress_string = '{} {}'.format(self.percentage_string(), self.bar())
+        return self.render()
 
-        if self.message is not None:
-            progress_string = '{} {}'.format(self.message, progress_string)
+    def render(self):
+        rendered_components = {
+            'percentage': '',
+            'description': '',
+            'bar': ''
+        }
 
-        self.out.write('\r' + progress_string)
+        non_component_widths = len(self.progress_format.format(**rendered_components))
+        remaining_width = self.computed_width() - non_component_widths
 
-        try:
-            return next(self.iter)
-        except:
-            self.out.write(self.finished_message_string())
-            raise
+        # Call formatters in order of priority.
+        for component in self.render_order:
+            render_func = getattr(self, 'render_{}'.format(component))
+            rendered_components[component] = render_func(remaining_width)
+            remaining_width -= len(rendered_components[component])
 
-    def finished_message_string(self):
-        if self.finished_message is None:
-            return '\n'
-
-        finished_string = '\r{{:{}}}\n'.format(self.width)
-        return finished_string.format(self.finished_message)
-
-
-    def bar_string_width(self):
-        bar_width = self.width - (self.percentage_string_width() + 1)
-        bar_width -= 2  # For ends
-
-        if self.message is not None:
-            bar_width -= (len(self.message) + 1)
-
-        if bar_width < 0:
-            bar_width = 0
-
-        return bar_width
-
-    def bar(self):
-        bar_width = self.bar_string_width()
-        number_of_marks = math.floor(self.percentage() * bar_width)
-
-        bar = '[{{:<{}}}]'.format(bar_width)
-        return bar.format(self.mark * number_of_marks)
+        return self.progress_format.format(**rendered_components)
 
     def percentage(self):
-        if self.total <= 0:
-            return 1.00
+        if self.total is None:
+            raise Exception('Total is undefined')
 
-        return self.progress / float(self.total)
+        percentage = 1.00
+        if self.total > 0:
+            percentage = self.progress / float(self.total)
 
-    def percentage_string(self):
-        percentage = 100 * self.percentage()
+        return percentage
 
-        # Technically could be rounding up here when I should be rounding down.
-        if self.digits > 0:
-            percentage = round(percentage, self.digits)
-        else:
-            percentage = int(math.floor(percentage))
+    def render_percentage(self, width):
+        percentage = self.percentage() * 100
+        return self.percentage_format.format(percentage)
 
-        # Subtract 1 for the % sign.
-        string_width = self.percentage_string_width() - 1
+    def render_bar(self, width):
+        non_component_width = len(self.bar_format.format(''))
+        mark_width = width - non_component_width
 
-        # Format right for the given width and precision.
-        percentage_string = '{{:>{}.{}f}}%'.format(string_width, self.digits)
-        return percentage_string.format(percentage)
+        mark_width_format = '{{:<{}}}'.format(mark_width)
+        bar_format_with_width = self.bar_format.format(mark_width_format)
 
-    def percentage_string_width(self):
-        # 3 characters plus % sign.
-        percentage_width = 4
-
-        if self.digits > 0:
-            # Decimal point plus digits
-            percentage_width += (1 + self.digits)
-
-        return percentage_width
-
+        number_of_marks = math.floor(self.percentage() * mark_width)
+        return bar_format_with_width.format(self.bar_mark * number_of_marks)
