@@ -1,67 +1,55 @@
-import math
 import shutil
+import string
 import sys
 
 
 class Progress(object):
-    def __init__(self, *args, **kwargs):
-        self.bar_mark = kwargs.get('bar_mark', '#')
-        self.bar_format = kwargs.get('bar_format', '[{}]')
-        self.message = kwargs.get('message', None)
-        self.percentage_format = kwargs.get('percentage_format', '{:>5.1f}%')
-        self.render_order = kwargs.get('render_order', ['percentage', 'bar'])
-        self.progress_format = kwargs.get('progress_format', '{percentage} {bar}')
+    def __init__(self, **kwargs):
+        self.count_format = kwargs.get('count_format', '{:>5}')
+        self.render_order = kwargs.get('render_order', self.renderable_components())
+        self.progress_format = kwargs.get('progress_format', 'Processed: {count}')
         self.stream = kwargs.get('stream', sys.stdout)
         self.width = kwargs.get('width', None)
-        self.total = kwargs.get('total', None)
 
-        self.progress = -1
+        # Sets initial state.
+        self.reset()
 
     def computed_width(self):
         return self.width or shutil.get_terminal_size().columns
 
     def tick(self):
-        self.progress += 1
-        return self.render()
+        self.count += 1
+        self.write()
+
+    def reset(self):
+        self.count = 0
+        self.write()
+
+    def write(self):
+        self.stream.write('\r' + self.render())
+
+    def renderable_components(self):
+        return ['count']
 
     def render(self):
-        rendered_components = {
-            'percentage': '',
-            'description': '',
-            'bar': ''
-        }
+        # Create a dictionary of renderable components with empty strings as the
+        # default for each component until it gets rendered.
+        rendered_components = dict((comp, '') for comp in self.renderable_components())
 
         non_component_widths = len(self.progress_format.format(**rendered_components))
         remaining_width = self.computed_width() - non_component_widths
 
+        # Figure out which components we need to render.
+        components_to_render = [x[1] for x in string.Formatter().parse(self.progress_format)]
+        render_order = filter(lambda comp: comp in components_to_render, self.render_order)
+
         # Call formatters in order of priority.
-        for component in self.render_order:
+        for component in render_order:
             render_func = getattr(self, 'render_{}'.format(component))
             rendered_components[component] = render_func(remaining_width)
             remaining_width -= len(rendered_components[component])
 
         return self.progress_format.format(**rendered_components)
 
-    def percentage(self):
-        if self.total is None:
-            raise Exception('Total is undefined')
-
-        percentage = 1.00
-        if self.total > 0:
-            percentage = self.progress / float(self.total)
-
-        return percentage
-
-    def render_percentage(self, width):
-        percentage = self.percentage() * 100
-        return self.percentage_format.format(percentage)
-
-    def render_bar(self, width):
-        non_component_width = len(self.bar_format.format(''))
-        mark_width = width - non_component_width
-
-        mark_width_format = '{{:<{}}}'.format(mark_width)
-        bar_format_with_width = self.bar_format.format(mark_width_format)
-
-        number_of_marks = math.floor(self.percentage() * mark_width)
-        return bar_format_with_width.format(self.bar_mark * number_of_marks)
+    def render_count(self, width):
+        return self.count_format.format(self.count)
