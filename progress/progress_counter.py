@@ -1,6 +1,6 @@
 import math
 
-from progress import Progress
+from .progress import Progress
 
 
 class ProgressCounter(Progress):

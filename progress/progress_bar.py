@@ -1,6 +1,6 @@
 import math
 
-from iterable_progress_counter import IterableProgressCounter
+from .iterable_progress_counter import IterableProgressCounter
 
 
 class ProgressBar(IterableProgressCounter):

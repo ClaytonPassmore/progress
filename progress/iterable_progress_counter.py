@@ -1,4 +1,4 @@
-from progress_counter import ProgressCounter
+from .progress_counter import ProgressCounter
 
 
 class IterableProgressCounter(ProgressCounter):

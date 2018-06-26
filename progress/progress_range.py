@@ -1,4 +1,4 @@
-from progress_bar import ProgressBar
+from .progress_bar import ProgressBar
 
 
 class ProgressRange(ProgressBar):
