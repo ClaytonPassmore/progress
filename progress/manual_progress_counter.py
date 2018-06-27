@@ -3,7 +3,7 @@ import math
 from .progress import Progress
 
 
-class ProgressCounter(Progress):
+class ManualProgressCounter(Progress):
     def __init__(self, **kwargs):
         self.bar_format = kwargs.get('bar_format', '[{}]')
         self.mark = kwargs.get('mark', '#')

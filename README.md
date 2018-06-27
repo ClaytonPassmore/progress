@@ -34,12 +34,23 @@ for filename in progress_bar(filenames):
   process(filename)
 ```
 
-Track progress for an undefined quantity.
+Track progress while looping over a stream of undefined length.
 
 ```python
-from progress import progress_counter
+from progress import iterable_progress_counter
 
-progress = progress_counter()
+file_descriptor = open('file.txt', 'r')
+
+for line in iterable_progress_counter(file_descriptor):
+  process(line)
+```
+
+Manually track progress without an iterable object.
+
+```python
+from progress import manual_progress_counter
+
+progress = manual_progress_counter()
 
 while(True):
   process()
