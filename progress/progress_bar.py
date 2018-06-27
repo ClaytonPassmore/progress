@@ -1,9 +1,9 @@
 import math
 
-from .iterable_progress_counter import IterableProgressCounter
+from .progress_counter import ProgressCounter
 
 
-class ProgressBar(IterableProgressCounter):
+class ProgressBar(ProgressCounter):
     def __init__(self, iterator, **kwargs):
         self.percentage_format = kwargs.get('percentage_format', '{:>5.1f}%')
 

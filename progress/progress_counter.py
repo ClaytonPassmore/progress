@@ -1,9 +1,9 @@
 import math
 
-from .progress_counter import ProgressCounter
+from .manual_progress_counter import ManualProgressCounter
 
 
-class IterableProgressCounter(ProgressCounter):
+class ProgressCounter(ManualProgressCounter):
     def __init__(self, iterable, **kwargs):
         self.iterable = iter(iterable)
         self.total = self.computed_total(iterable)

@@ -37,11 +37,11 @@ for filename in progress_bar(filenames):
 Track progress while looping over a stream of undefined length.
 
 ```python
-from progress import iterable_progress_counter
+from progress import progress_counter
 
 file_descriptor = open('file.txt', 'r')
 
-for line in iterable_progress_counter(file_descriptor):
+for line in progress_counter(file_descriptor):
   process(line)
 ```
 
