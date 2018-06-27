@@ -1,10 +1,12 @@
+import math
+
 from .progress_counter import ProgressCounter
 
 
 class IterableProgressCounter(ProgressCounter):
     def __init__(self, iterable, **kwargs):
         self.iterable = iter(iterable)
-        self.total = len(iterable)
+        self.total = self.computed_total(iterable)
 
         self.message = kwargs.get('message', None)
         self.total_format = kwargs.get('total_format', '{}')
@@ -25,6 +27,12 @@ class IterableProgressCounter(ProgressCounter):
             self.render_completed(self.computed_width())
             raise
 
+    def computed_total(self, iterable):
+        try:
+            return len(iterable)
+        except TypeError:
+            return math.inf
+
     def render_completed(self, width):
         if self.message is None:
             self.stream.write('\n')
@@ -35,7 +43,8 @@ class IterableProgressCounter(ProgressCounter):
         self.stream.write('\r{}\n'.format(formatted_message))
 
     def render_total(self, width):
-        return self.total_format.format(self.total)
+        renderable_total = 'Unknown' if self.total == math.inf else self.total
+        return self.total_format.format(renderable_total)
 
     def renderable_components(self):
         return ['total'] + super().renderable_components()
