@@ -27,7 +27,13 @@ class ProgressCounter(Progress):
         marks = self.mark * number_of_marks
 
         whitespace = bar_width - number_of_marks
-        left_whitespace = ' ' * (self.count % (whitespace))
+        offset = self.count % whitespace
+
+        moving_right = True if (self.count // whitespace) % 2 == 0 else False
+        if not moving_right:
+            offset = whitespace - offset
+
+        left_whitespace = ' ' * offset
 
         mark_format = '{{:<{}}}'.format(bar_width)
         mark_space = mark_format.format(left_whitespace + marks)
