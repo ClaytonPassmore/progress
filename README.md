@@ -22,6 +22,10 @@ for i in progress_range(10, -2, -2):
   process(i)
 ```
 
+```
+ 83.3% [##################################       ]
+```
+
 Track progress while looping over an iterable object.
 
 ```python
@@ -32,6 +36,10 @@ filenames = glob('*')
 
 for filename in progress_bar(filenames):
   process(filename)
+```
+
+```
+ 66.7% [###########################              ]
 ```
 
 Track progress while looping over a stream of undefined length.
@@ -45,6 +53,10 @@ for line in progress_counter(file_descriptor):
   process(line)
 ```
 
+```
+Processed:    66/Unknown [  ######               ]
+```
+
 Manually track progress without an iterable object.
 
 ```python
@@ -55,4 +67,8 @@ progress = manual_progress_counter()
 while(True):
   process()
   progress.tick()
+```
+
+```
+Processed:     6 [      #########                ]
 ```
