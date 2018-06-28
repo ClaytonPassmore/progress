@@ -1,4 +1,4 @@
-from .progress import Progress as progess
+from .progress import Progress as progress
 from .manual_progress_counter import ManualProgressCounter as manual_progress_counter
 from .progress_counter import ProgressCounter as progress_counter
 from .progress_bar import ProgressBar as progress_bar
