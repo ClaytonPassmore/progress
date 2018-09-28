@@ -24,7 +24,7 @@ class ProgressCounter(ManualProgressCounter):
             self.tick()
             return next_value
         except StopIteration:
-            self.render_completed(self.computed_width())
+            self.render_completed(self.compute_width())
             raise
 
     def computed_total(self, iterable):
